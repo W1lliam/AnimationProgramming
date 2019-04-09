@@ -1,0 +1,56 @@
+////////////////////////////////////////////////////////////////////////////////
+// Filename: color.ps
+////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////
+// INPUT VARIABLES //
+/////////////////////
+in lowp vec4 boneColor;
+in lowp vec4 outboneIndices;
+in lowp vec3 outColor;
+in lowp vec2 texCoord;
+in lowp vec3 outNormal;
+
+in lowp vec3 viewVector;
+
+
+//////////////////////
+// OUTPUT VARIABLES //
+//////////////////////
+out lowp vec4 outputColor;
+
+uniform sampler2D 		shaderTexture;
+uniform lowp vec3 		lightDirection;
+
+////////////////////////////////////////////////////////////////////////////////
+// Pixel Shader
+////////////////////////////////////////////////////////////////////////////////
+void main(void)
+{
+	lowp vec4 texturColor = vec4(0.55f, 0.55f, 0.55f, 1.0f);
+	//lowp vec4 texturColor = vec4(boneColor.xyz, 1.0f);
+
+	lowp vec3 lightDir = -lightDirection;
+	lowp float intensity = clamp(dot(normalize(outNormal), lightDir), 0.0f, 1.0f);
+	intensity = clamp(intensity + 0.4f, 0.0f, 1.0f);	
+
+	//william
+	vec3 lightAmbient 	= 	vec3(0.5f, 0.5f, 0.5f);
+	vec3 lightDiffuse	=	vec3(1.0f, 1.0f, 1.0f);
+	vec3 ambient		=	lightAmbient * texturColor.xyz;
+	vec3 normal 		= 	normalize(outNormal);
+	float NdotL			=	max(0.0f, dot(lightDir, normal));
+	vec3 diffuse		=	NdotL * lightDiffuse * texturColor.xyz;
+	vec3 finalColor		=	(ambient + diffuse);
+
+	if(NdotL > 0.0f)
+	{
+		vec3 R 		= reflect(lightDirection, normal);
+		vec3 V 		= normalize(viewVector);
+		finalColor += pow(max(dot(R, V), 0.0), 64) * vec3(0.5f,0.5f,0.5f);
+	}
+	
+	outputColor = vec4(finalColor, 1.0f);
+
+	//outputColor = (vec4(ambient.xyz, 1.0f) + texturColor) * intensity;
+}
